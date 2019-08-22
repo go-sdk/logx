@@ -34,6 +34,10 @@ func NewLogger() *Logger {
 	return log
 }
 
+func DefaultLogger() *Logger {
+	return log
+}
+
 func Close() {
 	for i := range closes {
 		closes[i]()
