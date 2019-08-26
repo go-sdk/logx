@@ -1,13 +1,11 @@
-package test
+package logx
 
 import (
 	"testing"
-
-	"github.com/go-sdk/logx"
 )
 
 func TestNewLogger(t *testing.T) {
-	l := logx.NewLogger()
+	l := NewLogger()
 	l.Debug("debug")
 	l.Info("info")
 	l.Warn("warn")
@@ -15,15 +13,15 @@ func TestNewLogger(t *testing.T) {
 }
 
 func TestDefaultLogger(t *testing.T) {
-	logx.SetLevel(logx.WarnLevel)
-	logx.Debug("debug")
-	logx.Info("info")
-	logx.Warn("warn")
-	logx.Error("error")
+	SetLevel(WarnLevel)
+	Debug("debug")
+	Info("info")
+	Warn("warn")
+	Error("error")
 }
 
 func TestDiscardLogger(t *testing.T) {
-	l := logx.DiscardLogger()
+	l := DiscardLogger()
 	l.Debug("debug")
 	l.Info("info")
 	l.Warn("warn")
