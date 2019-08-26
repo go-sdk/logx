@@ -2,6 +2,7 @@ package logx
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -35,6 +36,14 @@ func NewLogger() *Logger {
 }
 
 func DefaultLogger() *Logger {
+	return log
+}
+
+func DiscardLogger() *Logger {
+	log := &Logger{}
+	log.l = logrus.New()
+	log.l.SetOutput(ioutil.Discard)
+	log.Entry = &Entry{logrus.NewEntry(log.l)}
 	return log
 }
 
