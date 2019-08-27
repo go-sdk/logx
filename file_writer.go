@@ -1,7 +1,6 @@
 package logx
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -52,7 +51,6 @@ func AddFileWriter(config *FileWriterConfig) *FileWriter {
 }
 
 func (w *FileWriter) Levels() []logrus.Level {
-	fmt.Println(logrus.AllLevels[1 : w.c.Level+1])
 	return logrus.AllLevels[1 : w.c.Level+1]
 }
 
