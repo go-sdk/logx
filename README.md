@@ -1,7 +1,7 @@
 # logx
 
 [![CircleCI](https://img.shields.io/circleci/build/github/go-sdk/logx)](https://circleci.com/gh/go-sdk/logx)
-[![Travis](https://img.shields.io/travis/go-sdk/logx/master)](https://travis-ci.org/go-sdk/logx)
+[![Travis](https://img.shields.io/travis/go-sdk/logx)](https://travis-ci.org/go-sdk/logx)
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue)](./LICENSE)
 
 ## Install
