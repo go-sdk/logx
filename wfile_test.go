@@ -8,17 +8,21 @@ import (
 func TestAddFileWriter(t *testing.T) {
 	logPath := "log.log"
 
-	AddFileWriter(&FileWriterConfig{
-		Level:    DebugLevel,
+	SetLevel(DebugLevel)
+
+	l := AddFileWriter(&FileWriterConfig{
+		Level:    InfoLevel,
 		Filename: logPath,
 	})
 	defer Close()
 
-	Debug("debug")
-	Info("info")
-	Warn("warn")
-	Error("error")
+	Debug("Debug")
+	Info("Info")
+	Warn("Warn")
+	Error("Error")
 
 	bs, _ := ioutil.ReadFile(logPath)
 	t.Logf("%s", bs)
+
+	t.Logf("%v", l.Rotate())
 }
