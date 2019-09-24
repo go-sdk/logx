@@ -1,14 +1,21 @@
 package logx
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestLevel_String(t *testing.T) {
-	fmt.Println(FatalLevel)
-	fmt.Println(ErrorLevel)
-	fmt.Println(WarnLevel)
-	fmt.Println(InfoLevel)
-	fmt.Println(DebugLevel)
+func TestLevel(t *testing.T) {
+	assert.Equal(t, DebugLevel, ParseLevel("debug"))
+	assert.Equal(t, InfoLevel, ParseLevel("info"))
+	assert.Equal(t, WarnLevel, ParseLevel("warn"))
+	assert.Equal(t, ErrorLevel, ParseLevel("error"))
+	assert.Equal(t, OffLevel, ParseLevel("fatal"))
+
+	assert.Equal(t, DebugLevel.String(), "debug")
+	assert.Equal(t, InfoLevel.String(), "info")
+	assert.Equal(t, WarnLevel.String(), "warn")
+	assert.Equal(t, ErrorLevel.String(), "error")
+	assert.Equal(t, OffLevel.String(), "off")
 }

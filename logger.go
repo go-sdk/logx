@@ -1,234 +1,195 @@
 package logx
 
 import (
-	"context"
-	"io/ioutil"
-	"os"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 )
 
-type Logger struct {
-	l *logrus.Logger
-	*Entry
+type Logger interface {
+	Debug(v interface{})
+	Info(v interface{})
+	Warn(v interface{})
+	Error(v interface{})
+
+	Debugf(s string, v ...interface{})
+	Infof(s string, v ...interface{})
+	Warnf(s string, v ...interface{})
+	Errorf(s string, v ...interface{})
+
+	WithField(k string, v interface{}) Logger
+	WithFields(kv map[string]interface{}) Logger
+
+	Caller(skip ...int) Logger
+
+	GetLevel() Level
+	SetLevel(level Level)
 }
 
-var (
-	log = NewLogger()
+// --------------------------------------------------------------------------------
 
-	closes []func()
-)
+const minSkipFrameCount = 5
 
-func NewLogger() *Logger {
-	log := &Logger{}
-	log.l = logrus.New()
-	log.l.SetLevel(logrus.DebugLevel)
-	log.l.SetOutput(os.Stdout)
-	log.l.SetFormatter(&logrus.TextFormatter{
-		ForceColors:      true,
-		FullTimestamp:    true,
-		TimestampFormat:  time.RFC3339,
-		QuoteEmptyFields: true,
+type logger struct {
+	log    zerolog.Logger
+	skip   int
+	fields map[string]interface{}
+}
+
+func New() Logger {
+	return NewWithLevel(InfoLevel)
+}
+
+func NewWithLevel(level Level) Logger {
+	o := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+		w.TimeFormat = time.RFC3339
 	})
-	log.Entry = &Entry{logrus.NewEntry(log.l)}
-	return log
-}
-
-func DefaultLogger() *Logger {
-	return log
-}
-
-func DiscardLogger() *Logger {
-	log := &Logger{}
-	log.l = logrus.New()
-	log.l.SetOutput(ioutil.Discard)
-	log.Entry = &Entry{logrus.NewEntry(log.l)}
-	return log
-}
-
-func Close() {
-	for i := range closes {
-		closes[i]()
+	return &logger{
+		log:    zerolog.New(o).Level(zerolog.Level(level)),
+		fields: make(map[string]interface{}, 8),
 	}
 }
 
-func (l *Logger) SetLevel(level Level) {
-	l.l.SetLevel(logrus.Level(level))
+func (l *logger) Debug(v interface{}) {
+	l.print(DebugLevel, v)
 }
 
-func (l *Logger) GetLevel() Level {
-	return Level(l.l.GetLevel())
+func (l *logger) Info(v interface{}) {
+	l.print(InfoLevel, v)
 }
 
-func (l *Logger) WithError(err error) *Entry {
-	return &Entry{e: l.l.WithError(err)}
+func (l *logger) Warn(v interface{}) {
+	l.print(WarnLevel, v)
 }
 
-func (l *Logger) WithContext(ctx context.Context) *Entry {
-	return &Entry{e: l.l.WithContext(ctx)}
+func (l *logger) Error(v interface{}) {
+	l.print(ErrorLevel, v)
 }
 
-func (l *Logger) WithField(key string, value interface{}) *Entry {
-	return &Entry{e: l.l.WithField(key, value)}
+func (l *logger) Debugf(s string, v ...interface{}) {
+	l.printf(DebugLevel, s, v...)
 }
 
-func (l *Logger) WithFields(fields map[string]interface{}) *Entry {
-	return &Entry{e: l.l.WithFields(fields)}
+func (l *logger) Infof(s string, v ...interface{}) {
+	l.printf(InfoLevel, s, v...)
 }
 
-func (l *Logger) WithTime(t time.Time) *Entry {
-	return &Entry{e: l.l.WithTime(t)}
+func (l *logger) Warnf(s string, v ...interface{}) {
+	l.printf(WarnLevel, s, v...)
 }
 
-type Entry struct {
-	e *logrus.Entry
+func (l *logger) Errorf(s string, v ...interface{}) {
+	l.printf(ErrorLevel, s, v...)
 }
 
-func (e *Entry) Debug(args ...interface{}) {
-	e.e.Debug(args...)
+func (l *logger) WithField(k string, v interface{}) Logger {
+	ll := l.new()
+	ll.fields[k] = v
+	return ll
 }
 
-func (e *Entry) Info(args ...interface{}) {
-	e.e.Info(args...)
+func (l *logger) WithFields(kv map[string]interface{}) Logger {
+	ll := l.new()
+	for k, v := range kv {
+		ll.fields[k] = v
+	}
+	return ll
 }
 
-func (e *Entry) Warn(args ...interface{}) {
-	e.e.Warn(args...)
+func (l *logger) Caller(skip ...int) Logger {
+	ll := l.new()
+	if len(skip) > 0 && skip[0] > minSkipFrameCount {
+		ll.skip = skip[0]
+	} else {
+		ll.skip = minSkipFrameCount
+	}
+	return ll
 }
 
-func (e *Entry) Error(args ...interface{}) {
-	e.e.Error(args...)
+func (l *logger) GetLevel() Level {
+	return Level(l.log.GetLevel())
 }
 
-func (e *Entry) Fatal(args ...interface{}) {
-	e.e.Fatal(args...)
+func (l *logger) SetLevel(level Level) {
+	l.log = l.log.Level(zerolog.Level(level))
 }
 
-func (e *Entry) Debugf(format string, args ...interface{}) {
-	e.e.Debugf(format, args...)
+func (l *logger) new() *logger {
+	fields := make(map[string]interface{}, 8)
+	for k, v := range l.fields {
+		fields[k] = v
+	}
+	return &logger{
+		log:    l.log,
+		skip:   l.skip,
+		fields: fields,
+	}
 }
 
-func (e *Entry) Infof(format string, args ...interface{}) {
-	e.e.Infof(format, args...)
+func (l *logger) print(lvl Level, v interface{}) {
+	l.printf(lvl, "%v", v)
 }
 
-func (e *Entry) Warnf(format string, args ...interface{}) {
-	e.e.Warnf(format, args...)
+func (l *logger) printf(lvl Level, s string, v ...interface{}) {
+	ll := l.new().log
+	if l.skip >= minSkipFrameCount {
+		ll = ll.With().CallerWithSkipFrameCount(l.skip).Logger()
+	}
+	ll.WithLevel(zerolog.Level(lvl)).Timestamp().Fields(l.fields).Msgf(s, v...)
 }
 
-func (e *Entry) Errorf(format string, args ...interface{}) {
-	e.e.Errorf(format, args...)
+// --------------------------------------------------------------------------------
+
+var log = New()
+
+func Debug(v interface{}) {
+	log.Debug(v)
 }
 
-func (e *Entry) Fatalf(format string, args ...interface{}) {
-	e.e.Fatalf(format, args...)
+func Info(v interface{}) {
+	log.Info(v)
 }
 
-func (e *Entry) Debugln(args ...interface{}) {
-	e.e.Debugln(args...)
+func Warn(v interface{}) {
+	log.Warn(v)
 }
 
-func (e *Entry) Infoln(args ...interface{}) {
-	e.e.Infoln(args...)
+func Error(v interface{}) {
+	log.Error(v)
 }
 
-func (e *Entry) Warnln(args ...interface{}) {
-	e.e.Warnln(args...)
+func Debugf(s string, v ...interface{}) {
+	log.Debugf(s, v...)
 }
 
-func (e *Entry) Errorln(args ...interface{}) {
-	e.e.Errorln(args...)
+func Infof(s string, v ...interface{}) {
+	log.Infof(s, v...)
 }
 
-func (e *Entry) Fatalln(args ...interface{}) {
-	e.e.Fatalln(args...)
+func Warnf(s string, v ...interface{}) {
+	log.Warnf(s, v...)
 }
 
-func SetLevel(level Level) {
-	log.SetLevel(level)
+func Errorf(s string, v ...interface{}) {
+	log.Errorf(s, v...)
+}
+
+func WithField(k string, v interface{}) Logger {
+	return log.WithField(k, v)
+}
+
+func WithFields(kv map[string]interface{}) Logger {
+	return log.WithFields(kv)
+}
+
+func Caller(skip ...int) Logger {
+	return log.Caller(skip...)
 }
 
 func GetLevel() Level {
 	return log.GetLevel()
 }
 
-func WithError(err error) *Entry {
-	return log.WithError(err)
-}
-
-func WithContext(ctx context.Context) *Entry {
-	return log.WithContext(ctx)
-}
-
-func WithField(key string, value interface{}) *Entry {
-	return log.WithField(key, value)
-}
-
-func WithFields(fields map[string]interface{}) *Entry {
-	return log.WithFields(fields)
-}
-
-func WithTime(t time.Time) *Entry {
-	return log.WithTime(t)
-}
-
-func Debug(args ...interface{}) {
-	log.Debug(args...)
-}
-
-func Info(args ...interface{}) {
-	log.Info(args...)
-}
-
-func Warn(args ...interface{}) {
-	log.Warn(args...)
-}
-
-func Error(args ...interface{}) {
-	log.Error(args...)
-}
-
-func Fatal(args ...interface{}) {
-	log.Fatal(args...)
-}
-
-func Debugf(format string, args ...interface{}) {
-	log.Debugf(format, args...)
-}
-
-func Infof(format string, args ...interface{}) {
-	log.Infof(format, args...)
-}
-
-func Warnf(format string, args ...interface{}) {
-	log.Warnf(format, args...)
-}
-
-func Errorf(format string, args ...interface{}) {
-	log.Errorf(format, args...)
-}
-
-func Fatalf(format string, args ...interface{}) {
-	log.Fatalf(format, args...)
-}
-
-func Debugln(args ...interface{}) {
-	log.Debugln(args...)
-}
-
-func Infoln(args ...interface{}) {
-	log.Infoln(args...)
-}
-
-func Warnln(args ...interface{}) {
-	log.Warnln(args...)
-}
-
-func Errorln(args ...interface{}) {
-	log.Errorln(args...)
-}
-
-func Fatalln(args ...interface{}) {
-	log.Fatalln(args...)
+func SetLevel(level Level) {
+	log.SetLevel(level)
 }
