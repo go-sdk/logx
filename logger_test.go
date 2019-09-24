@@ -30,4 +30,6 @@ func TestLogger(t *testing.T) {
 	l2 := Caller()
 	l2.Info("4")
 	Info("4")
+
+	Caller(6).Info("5")
 }
