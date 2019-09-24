@@ -40,7 +40,7 @@ func main() {
 	l2.Info("4")
 	logx.Info("4")
 
-    logx.Caller(6).Info("5")
+	logx.Caller(6).Info("5")
 }
 ```
 
