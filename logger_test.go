@@ -7,7 +7,6 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	t.Log(GetLevel())
 	assert.Equal(t, GetLevel(), InfoLevel)
 
 	Debug("1")
@@ -16,7 +15,6 @@ func TestLogger(t *testing.T) {
 	Error("1")
 
 	SetLevel(DebugLevel)
-	t.Log(GetLevel())
 	assert.Equal(t, GetLevel(), DebugLevel)
 
 	Debugf("2")
