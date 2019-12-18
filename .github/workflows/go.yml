@@ -6,7 +6,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     env:
-      GOPATH: /.cache
+      GOPATH: ${HOME}/.cache
     steps:
       - name: Checkout
         uses: actions/checkout@v2
