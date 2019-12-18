@@ -5,8 +5,6 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    env:
-      GOPATH: /home/runner/work/.cache
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -15,7 +13,7 @@ jobs:
       - name: Cache
         uses: actions/cache@v1
         with:
-          path: ${GOPATH}
+          path: ~/.cache
           key: ${{ runner.os }}-${{ hashFiles('**/go.sum') }}
       - name: Go
         uses: actions/setup-go@v1
@@ -23,6 +21,7 @@ jobs:
           go-version: 1.13
       - name: Test
         run: |
+          export GOPATH=~/.cache
           CGO_ENABLED=0 GO111MODULE=on go test -cover -covermode=atomic -coverprofile=coverage.txt -v ./...
       - name: Codecov
         uses: codecov/codecov-action@v1
