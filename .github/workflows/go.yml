@@ -7,7 +7,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     env:
-      GOPATH: ~/.cache
+      GOPATH: ${{ HOME }}/.cache
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -16,7 +16,7 @@ jobs:
       - name: Cache
         uses: actions/cache@v1
         with:
-          path: ~/.cache
+          path: ${{ HOME }}/.cache
           key: ${{ runner.os }}-${{ hashFiles('**/go.sum') }}
       - name: Go
         uses: actions/setup-go@v1
