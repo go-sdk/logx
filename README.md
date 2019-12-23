@@ -1,6 +1,6 @@
 # logx
 
-[![CircleCI](https://github.com/go-sdk/logx/workflows/Go/badge.svg)](https://github.com/go-sdk/logx/actions)
+[![GithubAction](https://github.com/go-sdk/logx/workflows/Go/badge.svg)](https://github.com/go-sdk/logx/actions)
 [![Codecov](https://img.shields.io/codecov/c/github/go-sdk/logx)](https://codecov.io/gh/go-sdk/logx)
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue)](./LICENSE)
 
