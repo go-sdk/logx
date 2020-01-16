@@ -7,15 +7,15 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	assert.Equal(t, GetLevel(), InfoLevel)
+	assert.Equal(t, GetLevel(), DebugLevel)
 
 	Debug("1")
 	Info("1")
 	Warn("1")
 	Error("1")
 
-	SetLevel(DebugLevel)
-	assert.Equal(t, GetLevel(), DebugLevel)
+	SetLevel(InfoLevel)
+	assert.Equal(t, GetLevel(), InfoLevel)
 
 	Debugf("2")
 	Infof("2")

@@ -1,7 +1,7 @@
 package logx
 
 import (
-	"time"
+	"io"
 
 	"github.com/rs/zerolog"
 )
@@ -28,24 +28,30 @@ type Logger interface {
 
 // --------------------------------------------------------------------------------
 
-const minSkipFrameCount = 5
+const (
+	defaultLevel = DebugLevel
+
+	minSkipFrameCount = 5
+)
 
 type logger struct {
 	log    zerolog.Logger
+	level  Level
 	skip   int
 	fields map[string]interface{}
 }
 
 func New() Logger {
-	return NewWithLevel(InfoLevel)
+	return NewWithLevel(defaultLevel)
 }
 
 func NewWithLevel(level Level) Logger {
-	o := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-		w.TimeFormat = time.RFC3339
-	})
+	return NewWithWriters(NewConsoleWriter(ConsoleWriterConfig{Level: level, NoColor: false}))
+}
+
+func NewWithWriters(writers ...io.Writer) Logger {
 	return &logger{
-		log:    zerolog.New(o).Level(zerolog.Level(level)),
+		log:    zerolog.New(zerolog.MultiLevelWriter(writers...)).Level(zerolog.Level(defaultLevel)),
 		fields: make(map[string]interface{}, 8),
 	}
 }
@@ -107,11 +113,11 @@ func (l *logger) Caller(skip ...int) Logger {
 }
 
 func (l *logger) GetLevel() Level {
-	return Level(l.log.GetLevel())
+	return l.level
 }
 
 func (l *logger) SetLevel(level Level) {
-	l.log = l.log.Level(zerolog.Level(level))
+	l.level = level
 }
 
 func (l *logger) new() *logger {
@@ -131,6 +137,9 @@ func (l *logger) print(lvl Level, v interface{}) {
 }
 
 func (l *logger) printf(lvl Level, s string, v ...interface{}) {
+	if lvl < l.level {
+		return
+	}
 	ll := l.new().log
 	if l.skip >= minSkipFrameCount {
 		ll = ll.With().CallerWithSkipFrameCount(l.skip).Logger()
