@@ -50,6 +50,9 @@ func NewWithLevel(level Level) Logger {
 }
 
 func NewWithWriters(writers ...io.Writer) Logger {
+	if len(writers) == 0 {
+		writers = []io.Writer{NewConsoleWriter(ConsoleWriterConfig{Level: defaultLevel, NoColor: false})}
+	}
 	return &logger{
 		log:    zerolog.New(zerolog.MultiLevelWriter(writers...)).Level(zerolog.Level(defaultLevel)),
 		fields: make(map[string]interface{}, 8),
