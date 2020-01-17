@@ -1,33 +1,70 @@
 package logx
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLogger(t *testing.T) {
+	bb := &bytes.Buffer{}
+
+	w := NewConsoleWriter(ConsoleWriterConfig{Out: bb})
+	l := NewWithWriters(w)
+
+	SetLogger(l)
 	assert.Equal(t, GetLevel(), DebugLevel)
 
-	Debug("1")
-	Info("1")
-	Warn("1")
-	Error("1")
+	Debug("debug")
+	assert.Contains(t, bb.String(), "debug")
+
+	Info("info")
+	assert.Contains(t, bb.String(), "info")
+
+	Warn("warn")
+	assert.Contains(t, bb.String(), "warn")
+
+	Error("error")
+	assert.Contains(t, bb.String(), "error")
 
 	SetLevel(InfoLevel)
+	bb.Reset()
 	assert.Equal(t, GetLevel(), InfoLevel)
 
-	Debugf("2")
-	Infof("2")
-	Warnf("2")
-	Errorf("2")
+	Debugf("debugf")
+	assert.Empty(t, bb.String())
 
-	WithField("index", 1).Info("3")
-	WithFields(map[string]interface{}{"index": 2}).Info("3")
+	Infof("infof")
+	assert.Contains(t, bb.String(), "infof")
+
+	Warnf("warnf")
+	assert.Contains(t, bb.String(), "warnf")
+
+	Errorf("errorf")
+	assert.Contains(t, bb.String(), "errorf")
+
+	bb.Reset()
+
+	WithField("aaa", 1).Info("info")
+	assert.Contains(t, bb.String(), "aaa")
+
+	WithFields(map[string]interface{}{"bbb": 2}).Info("info")
+	assert.Contains(t, bb.String(), "bbb")
+
+	bb.Reset()
 
 	l2 := Caller()
-	l2.Info("4")
-	Info("4")
+	l2.Info("info")
+	assert.Contains(t, bb.String(), ">")
 
-	Caller(6).Info("5")
+	bb.Reset()
+
+	Info("info")
+	assert.NotContains(t, bb.String(), ">")
+
+	bb.Reset()
+
+	Caller(6).Info("info")
+	assert.Contains(t, bb.String(), ">")
 }

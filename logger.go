@@ -2,6 +2,7 @@ package logx
 
 import (
 	"io"
+	"sync"
 
 	"github.com/rs/zerolog"
 )
@@ -152,7 +153,10 @@ func (l *logger) printf(lvl Level, s string, v ...interface{}) {
 
 // --------------------------------------------------------------------------------
 
-var log = New()
+var (
+	log   = New()
+	logMu = sync.Mutex{}
+)
 
 func Debug(v interface{}) {
 	log.Debug(v)
@@ -199,9 +203,19 @@ func Caller(skip ...int) Logger {
 }
 
 func GetLevel() Level {
+	logMu.Lock()
+	defer logMu.Unlock()
 	return log.GetLevel()
 }
 
 func SetLevel(level Level) {
+	logMu.Lock()
+	defer logMu.Unlock()
 	log.SetLevel(level)
+}
+
+func SetLogger(logger Logger) {
+	logMu.Lock()
+	defer logMu.Unlock()
+	log = logger
 }
