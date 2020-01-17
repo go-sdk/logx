@@ -38,10 +38,9 @@ func TestNewConsoleWriter2(t *testing.T) {
 
 func TestNewFileWriter(t *testing.T) {
 	path := t.Name() + ".log"
-
 	defer func() { _ = os.Remove(path) }()
 
-	w := NewFileWriter(FileWriterConfig{Filename: path})
+	w := NewFileWriter(FileWriterConfig{NoColor: true, Filename: path})
 	l := NewWithWriters(w)
 	defer func() { _ = w.Close() }()
 
