@@ -16,7 +16,7 @@ type ConsoleWriterConfig struct {
 	Out        io.Writer
 	NoColor    bool
 	TimeFormat string
-	w          zerolog.ConsoleWriter
+	w          io.Writer
 }
 
 func NewConsoleWriter(conf ConsoleWriterConfig) ConsoleWriterConfig {
@@ -53,14 +53,24 @@ func (w ConsoleWriterConfig) Close() error {
 
 type FileWriterConfig struct {
 	Level      Level
+	Type       FileWriterType
+	NoColor    bool
+	TimeFormat string
 	Filename   string
 	MaxSize    int
 	MaxAge     int
 	MaxBackups int
 	LocalTime  bool
 	Compress   bool
-	w          *lumberjack.Logger
+	w          io.WriteCloser
 }
+
+type FileWriterType uint
+
+const (
+	TextFileWriter FileWriterType = iota
+	JSONFileWriter
+)
 
 func NewFileWriter(conf FileWriterConfig) FileWriterConfig {
 	conf.w = &lumberjack.Logger{
@@ -70,6 +80,16 @@ func NewFileWriter(conf FileWriterConfig) FileWriterConfig {
 		MaxBackups: conf.MaxBackups,
 		LocalTime:  conf.LocalTime,
 		Compress:   conf.Compress,
+	}
+	switch conf.Type {
+	case JSONFileWriter:
+	case TextFileWriter:
+		conf.w = NewConsoleWriter(ConsoleWriterConfig{
+			Level:      conf.Level,
+			Out:        conf.w,
+			NoColor:    conf.NoColor,
+			TimeFormat: conf.TimeFormat,
+		})
 	}
 	return conf
 }
@@ -86,9 +106,23 @@ func (w FileWriterConfig) WriteLevel(level zerolog.Level, p []byte) (n int, err 
 }
 
 func (w FileWriterConfig) Rotate() error {
-	return w.w.Rotate()
+	switch w.w.(type) {
+	case *lumberjack.Logger:
+		return w.w.(*lumberjack.Logger).Rotate()
+	case ConsoleWriterConfig:
+		return w.w.(ConsoleWriterConfig).Out.(*lumberjack.Logger).Rotate()
+	default:
+		return nil
+	}
 }
 
 func (w FileWriterConfig) Close() error {
-	return w.w.Close()
+	switch w.w.(type) {
+	case *lumberjack.Logger:
+		return w.w.(*lumberjack.Logger).Close()
+	case ConsoleWriterConfig:
+		return w.w.(ConsoleWriterConfig).Out.(*lumberjack.Logger).Close()
+	default:
+		return w.w.Close()
+	}
 }
