@@ -13,6 +13,7 @@ const (
 	InfoLevel  = Level(zerolog.InfoLevel)
 	WarnLevel  = Level(zerolog.WarnLevel)
 	ErrorLevel = Level(zerolog.ErrorLevel)
+	FatalLevel = Level(zerolog.FatalLevel)
 	OffLevel   = Level(zerolog.Disabled)
 )
 
@@ -26,6 +27,8 @@ func (level Level) String() string {
 		return "warn"
 	case ErrorLevel:
 		return "error"
+	case FatalLevel:
+		return "fatal"
 	}
 	return "off"
 }
@@ -40,6 +43,8 @@ func ParseLevel(level string) Level {
 		return WarnLevel
 	case "error":
 		return ErrorLevel
+	case "fatal":
+		return FatalLevel
 	}
 	return OffLevel
 }

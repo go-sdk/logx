@@ -2,6 +2,7 @@ package logx
 
 import (
 	"io"
+	"os"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -12,11 +13,13 @@ type Logger interface {
 	Info(v interface{})
 	Warn(v interface{})
 	Error(v interface{})
+	Fatal(v interface{})
 
 	Debugf(s string, v ...interface{})
 	Infof(s string, v ...interface{})
 	Warnf(s string, v ...interface{})
 	Errorf(s string, v ...interface{})
+	Fatalf(s string, v ...interface{})
 
 	WithField(k string, v interface{}) Logger
 	WithFields(kv map[string]interface{}) Logger
@@ -76,6 +79,11 @@ func (l *logger) Error(v interface{}) {
 	l.print(ErrorLevel, v)
 }
 
+func (l *logger) Fatal(v interface{}) {
+	l.print(FatalLevel, v)
+	os.Exit(1)
+}
+
 func (l *logger) Debugf(s string, v ...interface{}) {
 	l.printf(DebugLevel, s, v...)
 }
@@ -90,6 +98,11 @@ func (l *logger) Warnf(s string, v ...interface{}) {
 
 func (l *logger) Errorf(s string, v ...interface{}) {
 	l.printf(ErrorLevel, s, v...)
+}
+
+func (l *logger) Fatalf(s string, v ...interface{}) {
+	l.printf(FatalLevel, s, v...)
+	os.Exit(1)
 }
 
 func (l *logger) WithField(k string, v interface{}) Logger {
@@ -174,6 +187,10 @@ func Error(v interface{}) {
 	log.Error(v)
 }
 
+func Fatal(v interface{}) {
+	log.Fatal(v)
+}
+
 func Debugf(s string, v ...interface{}) {
 	log.Debugf(s, v...)
 }
@@ -188,6 +205,10 @@ func Warnf(s string, v ...interface{}) {
 
 func Errorf(s string, v ...interface{}) {
 	log.Errorf(s, v...)
+}
+
+func Fatalf(s string, v ...interface{}) {
+	log.Fatalf(s, v...)
 }
 
 func WithField(k string, v interface{}) Logger {
