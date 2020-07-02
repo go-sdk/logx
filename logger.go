@@ -50,12 +50,12 @@ func New() Logger {
 }
 
 func NewWithLevel(level Level) Logger {
-	return NewWithWriters(NewConsoleWriter(ConsoleWriterConfig{Level: level, NoColor: false}))
+	return NewWithWriters(NewConsoleWriter(ConsoleWriterConfig{Level: level}))
 }
 
 func NewWithWriters(writers ...io.Writer) Logger {
 	if len(writers) == 0 {
-		writers = []io.Writer{NewConsoleWriter(ConsoleWriterConfig{Level: defaultLevel, NoColor: false})}
+		writers = []io.Writer{NewConsoleWriter(ConsoleWriterConfig{Level: defaultLevel})}
 	}
 	return &logger{
 		log:    zerolog.New(zerolog.MultiLevelWriter(writers...)).Level(zerolog.Level(defaultLevel)),
@@ -167,7 +167,8 @@ func (l *logger) printf(lvl Level, s string, v ...interface{}) {
 // --------------------------------------------------------------------------------
 
 var (
-	log   = New()
+	log Logger
+
 	logMu = sync.Mutex{}
 )
 
