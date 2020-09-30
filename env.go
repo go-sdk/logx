@@ -33,13 +33,15 @@ func init() {
 		return TextFileWriter
 	}
 
+	// ------------------------------------------------------------
+
 	writers := []io.Writer{
 		NewConsoleWriter(ConsoleWriterConfig{Level: defaultLevel}),
 	}
 
 	if level := ParseLevel(S("LOGX_FILE_LEVEL")); level != OffLevel {
-		writers = append(writers, NewFileWriter(FileWriterConfig{
-			Level:      ParseLevel(S("LOGX_FILE_LEVEL")),
+		writer := NewFileWriter(FileWriterConfig{
+			Level:      level,
 			Type:       FileType(),
 			NoColor:    B("LOGX_FILE_NO_COLOR"),
 			Filename:   S("LOGX_FILE_NAME", "app.log"),
@@ -48,8 +50,13 @@ func init() {
 			MaxBackups: I("LOGX_FILE_MAX_BACKUPS"),
 			LocalTime:  B("LOGX_FILE_LOCAL_TIME"),
 			Compress:   B("LOGX_FILE_COMPRESS"),
-		}))
+		})
+		writers = append(writers, writer)
 	}
 
 	log = NewWithWriters(writers...)
+
+	if s := S("LOGX_LEVEL"); s != "" {
+		log.SetLevel(ParseLevel(s))
+	}
 }
