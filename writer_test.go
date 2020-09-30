@@ -36,16 +36,36 @@ func TestNewConsoleWriter2(t *testing.T) {
 	assert.Contains(t, bb.String(), "error")
 }
 
-func TestNewFileWriter(t *testing.T) {
+func TestNewFileWriter1(t *testing.T) {
 	path := t.Name() + ".log"
-	defer func() { _ = os.Remove(path) }()
 
 	w := NewFileWriter(FileWriterConfig{NoColor: true, Filename: path})
 	l := NewWithWriters(w)
-	defer func() { _ = w.Close() }()
 
-	l.Info("info")
+	l.Info("info1")
 
 	_, err := os.Stat(path)
 	assert.Nil(t, err)
+
+	err = w.Rotate()
+	assert.Nil(t, err)
+
+	l.Info("info2")
+}
+
+func TestNewFileWriter2(t *testing.T) {
+	path := t.Name() + ".log"
+
+	w := NewFileWriter(FileWriterConfig{Type: JSONFileWriter, Filename: path})
+	l := NewWithWriters(w)
+
+	l.Info("info1")
+
+	_, err := os.Stat(path)
+	assert.Nil(t, err)
+
+	err = w.Rotate()
+	assert.Nil(t, err)
+
+	l.Info("info2")
 }

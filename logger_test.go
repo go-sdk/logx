@@ -8,12 +8,20 @@ import (
 )
 
 func TestLogger(t *testing.T) {
+	l1 := New()
+	l1.Debug("debug1")
+
+	l2 := NewWithLevel(InfoLevel)
+	l2.Debug("debug2")
+
+	l3 := NewWithWriters()
+	l3.Debug("debug3")
+
 	bb := &bytes.Buffer{}
 
 	w := NewConsoleWriter(ConsoleWriterConfig{Out: bb})
-	l := NewWithWriters(w)
-
-	SetLogger(l)
+	l4 := NewWithWriters(w)
+	SetLogger(l4)
 	assert.Equal(t, GetLevel(), DebugLevel)
 
 	Debug("debug")
@@ -54,8 +62,8 @@ func TestLogger(t *testing.T) {
 
 	bb.Reset()
 
-	l2 := Caller()
-	l2.Info("info")
+	l5 := Caller()
+	l5.Info("info")
 	assert.Contains(t, bb.String(), ">")
 
 	bb.Reset()
