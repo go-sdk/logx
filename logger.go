@@ -150,10 +150,14 @@ func (l *logger) new() *logger {
 }
 
 func (l *logger) print(lvl Level, v interface{}) {
-	l.printf(lvl, "%v", v)
+	l.do(lvl, "%v", v)
 }
 
 func (l *logger) printf(lvl Level, s string, v ...interface{}) {
+	l.do(lvl, s, v...)
+}
+
+func (l *logger) do(lvl Level, s string, v ...interface{}) {
 	if lvl < l.level {
 		return
 	}
